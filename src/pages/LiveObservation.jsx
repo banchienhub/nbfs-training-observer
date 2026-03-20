@@ -326,7 +326,7 @@ export default function LiveObservation() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                <BehaviorDetailPopup behavior={detailBehavior} onClose={() => setDetailBehavior(null)} inline />
+                <BehaviorDetailPopup behavior={detailBehavior} onClose={() => setDetailBehavior(null)} />
               </div>
             </div>
           )}
