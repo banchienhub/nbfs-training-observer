@@ -10,8 +10,10 @@ import {
   ChevronDown,
   X,
   Loader2,
-  MessageSquare
+  MessageSquare,
+  Info
 } from 'lucide-react';
+import BehaviorDetailPopup from '@/components/BehaviorDetailPopup';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
