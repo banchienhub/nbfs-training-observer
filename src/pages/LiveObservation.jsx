@@ -299,6 +299,38 @@ export default function LiveObservation() {
             </div>
           </SheetHeader>
 
+          {/* Behavior Detail Popup - inside Sheet to avoid pointer-events block */}
+          {detailBehavior && (
+            <div
+              className="absolute inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4"
+              onClick={() => setDetailBehavior(null)}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="bg-slate-800 rounded-2xl w-full max-w-md overflow-hidden"
+              >
+                <div className="flex items-start justify-between p-5 border-b border-slate-700">
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">
+                      {detailBehavior.code}
+                    </p>
+                    <h2 className="text-white font-bold text-lg">{detailBehavior.name_it}</h2>
+                    {detailBehavior.definition_it && (
+                      <p className="text-slate-400 text-sm mt-1">{detailBehavior.definition_it}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setDetailBehavior(null)}
+                    className="p-2 text-slate-500 hover:text-white transition-colors ml-4 shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <BehaviorDetailPopup behavior={detailBehavior} onClose={() => setDetailBehavior(null)} inline />
+              </div>
+            </div>
+          )}
+
           <div className="overflow-auto h-full pb-20">
             {domains.map((domain) => {
               const domainBehaviors = getBehaviorsByDomain(domain.id);
