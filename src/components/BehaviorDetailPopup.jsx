@@ -13,7 +13,7 @@ export default function BehaviorDetailPopup({ behavior, onClose }) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 bg-black/70 z-[200] flex items-end sm:items-center justify-center p-4"
       onPointerDown={onClose}
