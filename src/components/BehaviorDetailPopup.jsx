@@ -84,6 +84,7 @@ export default function BehaviorDetailPopup({ behavior, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
