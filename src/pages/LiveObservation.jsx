@@ -323,9 +323,15 @@ export default function LiveObservation() {
                         <div key={behavior.id} className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex-1 min-w-0 pr-2">
-                              <p className="text-white font-medium text-sm truncate">
-                                {behavior.name_it}
-                              </p>
+                              <button
+                                onClick={() => setDetailBehavior(behavior)}
+                                className="flex items-center gap-1.5 group/title text-left"
+                              >
+                                <p className="text-white font-medium text-sm truncate group-hover/title:text-emerald-300 transition-colors">
+                                  {behavior.name_it}
+                                </p>
+                                <Info className="w-3.5 h-3.5 text-slate-500 group-hover/title:text-emerald-400 shrink-0 transition-colors" />
+                              </button>
                             </div>
                             <button
                               onClick={() => {
