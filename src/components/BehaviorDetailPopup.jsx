@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, CheckCircle2, XCircle } from 'lucide-react';
 import { BEHAVIOR_GUIDE } from '@/lib/behaviorGuide';
 
