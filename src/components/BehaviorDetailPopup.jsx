@@ -84,8 +84,7 @@ export default function BehaviorDetailPopup({ behavior, onClose }) {
               <p className="text-slate-500 text-sm">Nessuna guida disponibile per questo comportamento.</p>
             )}
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </div>
   );
 }
