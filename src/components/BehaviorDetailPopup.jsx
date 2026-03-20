@@ -1,5 +1,4 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect } from 'react';
 import { X, CheckCircle2, XCircle } from 'lucide-react';
 import { BEHAVIOR_GUIDE } from '@/lib/behaviorGuide';
 
@@ -7,23 +6,21 @@ export default function BehaviorDetailPopup({ behavior, onClose }) {
   if (!behavior) return null;
   const guide = BEHAVIOR_GUIDE[behavior.code] || {};
 
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 z-[100] flex items-end sm:items-center justify-center p-4"
-        onClick={onClose}
+    <div
+      className="fixed inset-0 bg-black/70 z-[200] flex items-end sm:items-center justify-center p-4"
+      onPointerDown={onClose}
+    >
+      <div
+        onPointerDown={(e) => e.stopPropagation()}
+        className="bg-slate-800 rounded-2xl w-full max-w-md overflow-hidden"
       >
-        <motion.div
-          initial={{ y: 60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 60, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-slate-800 rounded-2xl w-full max-w-md overflow-hidden"
-        >
           {/* Header */}
           <div className="flex items-start justify-between p-5 border-b border-slate-700">
             <div>
