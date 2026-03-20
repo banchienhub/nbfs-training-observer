@@ -392,13 +392,7 @@ export default function LiveObservation() {
         </SheetContent>
       </Sheet>
 
-      {/* Behavior Detail Popup */}
-      {detailBehavior && (
-        <BehaviorDetailPopup
-          behavior={detailBehavior}
-          onClose={() => setDetailBehavior(null)}
-        />
-      )}
+
 
       {/* Note Dialog */}
       <AnimatePresence>
