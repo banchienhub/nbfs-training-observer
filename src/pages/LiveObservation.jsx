@@ -43,6 +43,7 @@ export default function LiveObservation() {
   const [playerObservations, setPlayerObservations] = useState({});
   const [showNote, setShowNote] = useState(null);
   const [noteText, setNoteText] = useState('');
+  const [detailBehavior, setDetailBehavior] = useState(null);
   const [savingStates, setSavingStates] = useState({});
 
   const { data: session } = useQuery({
