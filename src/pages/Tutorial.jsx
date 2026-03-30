@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Play, Loader2, Upload, X } from 'lucide-react';
+import { Plus, Trash2, Play, Loader2, Upload, X, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +30,15 @@ export default function Tutorial() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [playingVideo, setPlayingVideo] = useState(null);
+  const [editingTutorial, setEditingTutorial] = useState(null); // { id, title, description }
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Tutorial.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tutorials'] });
+      setEditingTutorial(null);
+    },
+  });
 
   const { data: tutorials = [], isLoading } = useQuery({
     queryKey: ['tutorials'],
@@ -133,30 +142,14 @@ export default function Tutorial() {
                       <p className="text-sm text-slate-500 mt-1 line-clamp-2">{tutorial.description}</p>
                     )}
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="icon" variant="ghost" className="shrink-0 text-slate-400 hover:text-red-500">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Elimina tutorial</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Sei sicuro di voler eliminare "{tutorial.title}"?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annulla</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteMutation.mutate(tutorial.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Elimina
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="shrink-0 text-slate-400 hover:text-slate-700"
+                    onClick={() => setEditingTutorial({ id: tutorial.id, title: tutorial.title, description: tutorial.description || '' })}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -244,6 +237,73 @@ export default function Tutorial() {
               {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : `Carica ${batchItems.length > 1 ? `${batchItems.length} video` : 'video'}`}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingTutorial} onOpenChange={(open) => !open && setEditingTutorial(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifica Tutorial</DialogTitle>
+          </DialogHeader>
+          {editingTutorial && (
+            <div className="space-y-4 pt-2">
+              <div>
+                <label className="text-sm font-medium text-slate-700">Titolo *</label>
+                <Input
+                  value={editingTutorial.title}
+                  onChange={(e) => setEditingTutorial({ ...editingTutorial, title: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700">Descrizione</label>
+                <textarea
+                  value={editingTutorial.description}
+                  onChange={(e) => setEditingTutorial({ ...editingTutorial, description: e.target.value })}
+                  rows={3}
+                  className="mt-1 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 gap-2">
+                      <Trash2 className="w-4 h-4" />
+                      Elimina
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Elimina tutorial</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Sei sicuro di voler eliminare "{editingTutorial.title}"?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annulla</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => { deleteMutation.mutate(editingTutorial.id); setEditingTutorial(null); }}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Elimina
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <div className="flex gap-2 flex-1 justify-end">
+                  <Button variant="outline" onClick={() => setEditingTutorial(null)}>Annulla</Button>
+                  <Button
+                    onClick={() => updateMutation.mutate({ id: editingTutorial.id, data: { title: editingTutorial.title, description: editingTutorial.description } })}
+                    disabled={!editingTutorial.title || updateMutation.isPending}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
