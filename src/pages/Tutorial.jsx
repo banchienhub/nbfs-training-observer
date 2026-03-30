@@ -26,9 +26,9 @@ import {
 export default function Tutorial() {
   const queryClient = useQueryClient();
   const [showDialog, setShowDialog] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '' });
-  const [videoFile, setVideoFile] = useState(null);
+  const [batchItems, setBatchItems] = useState([]); // [{ file, title, description }]
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [playingVideo, setPlayingVideo] = useState(null);
 
   const { data: tutorials = [], isLoading } = useQuery({
@@ -41,19 +41,42 @@ export default function Tutorial() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tutorials'] }),
   });
 
+  const handleFilesSelected = (e) => {
+    const files = Array.from(e.target.files);
+    const newItems = files.map((file) => ({
+      file,
+      title: file.name.replace(/\.[^/.]+$/, ''), // strip extension as default title
+      description: '',
+    }));
+    setBatchItems((prev) => [...prev, ...newItems]);
+    e.target.value = '';
+  };
+
+  const updateItem = (index, field, value) => {
+    setBatchItems((prev) => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  };
+
+  const removeItem = (index) => {
+    setBatchItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleUpload = async () => {
-    if (!form.title || !videoFile) return;
+    if (batchItems.length === 0) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file: videoFile });
-    await base44.entities.Tutorial.create({
-      title: form.title,
-      description: form.description,
-      video_url: file_url,
-    });
+    setUploadProgress({ done: 0, total: batchItems.length });
+    for (let i = 0; i < batchItems.length; i++) {
+      const item = batchItems[i];
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: item.file });
+      await base44.entities.Tutorial.create({
+        title: item.title || item.file.name,
+        description: item.description,
+        video_url: file_url,
+      });
+      setUploadProgress({ done: i + 1, total: batchItems.length });
+    }
     queryClient.invalidateQueries({ queryKey: ['tutorials'] });
     setShowDialog(false);
-    setForm({ title: '', description: '' });
-    setVideoFile(null);
+    setBatchItems([]);
     setUploading(false);
   };
 
@@ -142,66 +165,84 @@ export default function Tutorial() {
       )}
 
       {/* Upload Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md">
+      <Dialog open={showDialog} onOpenChange={(open) => { if (!uploading) { setShowDialog(open); if (!open) setBatchItems([]); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Nuovo Tutorial</DialogTitle>
+            <DialogTitle>Carica Tutorial</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div>
-              <label className="text-sm font-medium text-slate-700">Titolo *</label>
-              <Input
-                placeholder="es. Come osservare lo Scanning"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="mt-1"
+
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            {/* Drop zone */}
+            <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+              <Upload className="w-6 h-6 text-slate-400 mb-1" />
+              <span className="text-sm text-slate-500 font-medium">Clicca per aggiungere video</span>
+              <span className="text-xs text-slate-400">Puoi selezionarne più d'uno</span>
+              <input
+                type="file"
+                accept="video/*"
+                multiple
+                className="hidden"
+                onChange={handleFilesSelected}
               />
+            </label>
+
+            {/* Batch list */}
+            {batchItems.length > 0 && (
+              <div className="space-y-3">
+                {batchItems.map((item, index) => (
+                  <div key={index} className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Play className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="text-xs text-slate-500 truncate flex-1">{item.file.name}</span>
+                      <button onClick={() => removeItem(index)} className="text-slate-400 hover:text-red-500">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <Input
+                      placeholder="Titolo *"
+                      value={item.title}
+                      onChange={(e) => updateItem(index, 'title', e.target.value)}
+                      className="mb-2 bg-white"
+                    />
+                    <textarea
+                      placeholder="Descrizione (opzionale)"
+                      value={item.description}
+                      onChange={(e) => updateItem(index, 'description', e.target.value)}
+                      rows={2}
+                      className="w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {uploading && (
+            <div className="pt-3">
+              <div className="flex items-center justify-between text-sm text-slate-600 mb-1">
+                <span>Caricamento in corso...</span>
+                <span>{uploadProgress.done}/{uploadProgress.total}</span>
+              </div>
+              <div className="w-full bg-slate-200 rounded-full h-2">
+                <div
+                  className="bg-emerald-500 h-2 rounded-full transition-all"
+                  style={{ width: `${(uploadProgress.done / uploadProgress.total) * 100}%` }}
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Descrizione</label>
-              <textarea
-                placeholder="Descrivi cosa mostra questo video..."
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
-                className="mt-1 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Video *</label>
-              {videoFile ? (
-                <div className="mt-1 flex items-center gap-2 p-3 bg-slate-50 rounded-lg border">
-                  <Play className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="text-sm text-slate-700 truncate flex-1">{videoFile.name}</span>
-                  <button onClick={() => setVideoFile(null)} className="text-slate-400 hover:text-slate-600">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <label className="mt-1 flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                  <Upload className="w-6 h-6 text-slate-400 mb-1" />
-                  <span className="text-sm text-slate-500">Clicca per selezionare un video</span>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    className="hidden"
-                    onChange={(e) => setVideoFile(e.target.files[0])}
-                  />
-                </label>
-              )}
-            </div>
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => setShowDialog(false)} className="flex-1">
-                Annulla
-              </Button>
-              <Button
-                onClick={handleUpload}
-                disabled={!form.title || !videoFile || uploading}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-              >
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Carica'}
-              </Button>
-            </div>
+          )}
+
+          <div className="flex gap-3 pt-4 border-t mt-2">
+            <Button variant="outline" onClick={() => { setShowDialog(false); setBatchItems([]); }} className="flex-1" disabled={uploading}>
+              Annulla
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={batchItems.length === 0 || batchItems.some(i => !i.title) || uploading}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+            >
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : `Carica ${batchItems.length > 1 ? `${batchItems.length} video` : 'video'}`}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
