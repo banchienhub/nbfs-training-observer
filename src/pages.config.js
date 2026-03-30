@@ -1,4 +1,5 @@
 import Dashboard from './pages/Dashboard';
+import Tutorial from './pages/Tutorial';
 import Sessions from './pages/Sessions';
 import NewSession from './pages/NewSession';
 import SessionDetail from './pages/SessionDetail';
@@ -20,6 +21,7 @@ export const PAGES = {
     "Players": Players,
     "Settings": Settings,
     "Reports": Reports,
+    "Tutorial": Tutorial,
 }
 
 export const pagesConfig = {

@@ -11,7 +11,8 @@ import {
   X, 
   LogOut,
   Activity,
-  ChevronRight
+  ChevronRight,
+  PlayCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -48,6 +49,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Sessioni', page: 'Sessions', icon: ClipboardList, show: isObserver },
     { name: 'Report', page: 'Reports', icon: Activity, show: true },
     { name: 'Giocatori', page: 'Players', icon: Users, show: isAdmin },
+    { name: 'Tutorial', page: 'Tutorial', icon: PlayCircle, show: true },
     { name: 'Impostazioni', page: 'Settings', icon: Settings, show: isAdmin },
   ].filter(item => item.show);
 

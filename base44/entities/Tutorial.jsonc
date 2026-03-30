@@ -1,0 +1,22 @@
+{
+  "name": "Tutorial",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Titolo del tutorial"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descrizione del contenuto del video"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "URL del video caricato"
+    }
+  },
+  "required": [
+    "title",
+    "video_url"
+  ]
+}
